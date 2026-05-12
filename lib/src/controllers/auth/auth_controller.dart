@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat/core/utils/snackbar_helper.dart';
+import 'package:flutter_chat/core/utils/storage_service.dart';
 import 'package:flutter_chat/services/api/api_service.dart';
 import 'package:flutter_chat/services/api/auth/auth_service.dart';
+import 'package:flutter_chat/services/routes/route_paths.dart';
 import 'package:get/get.dart';
 
 class AuthController extends GetxController {
@@ -9,6 +11,7 @@ class AuthController extends GetxController {
   AuthController({required ApiBaseClientService dioService})
     : _authService = AuthService(dioService: dioService);
 
+  final _localStorageService = StorageService();
   final loingEmailController = TextEditingController();
   final loginPasswordController = TextEditingController();
   final signupEmailController = TextEditingController();
@@ -21,8 +24,7 @@ class AuthController extends GetxController {
     try {
       isLoading.value = true;
       final password = loginPasswordController.text;
-      final email = loginPasswordController.text;
-
+      final email = loingEmailController.text;
       if (password.isEmpty || email.isEmpty) {
         return SnackbarHelper.showError(message: "enter all details");
       }
@@ -36,7 +38,11 @@ class AuthController extends GetxController {
           return SnackbarHelper.showError(message: error.message.toString());
         },
         (success) {
-          debugPrint(success);
+          _localStorageService.saveToken(success.data!.token.toString());
+          Get.offAllNamed(RoutePaths.bottomNav);
+          return SnackbarHelper.showSuccess(
+            message: "User logged in successfully",
+          );
         },
       );
     } catch (e) {
@@ -49,11 +55,9 @@ class AuthController extends GetxController {
   Future<void> signupUser() async {
     try {
       isLoading.value = true;
-
       final password = signupPasswordController.text;
       final email = signupEmailController.text;
       final fullName = signupEmailController.text;
-
       if (password.isEmpty || email.isEmpty || fullName.isEmpty) {
         return SnackbarHelper.showError(message: "enter all details");
       }
@@ -64,10 +68,15 @@ class AuthController extends GetxController {
       );
       res.fold(
         (error) {
+          debugPrint("$error");
           return SnackbarHelper.showError(message: error.message.toString());
         },
         (success) {
-          debugPrint(success);
+          _localStorageService.saveToken(success.data!.token.toString());
+          Get.offAllNamed(RoutePaths.bottomNav);
+          return SnackbarHelper.showSuccess(
+            message: "User signed up successfully",
+          );
         },
       );
     } catch (e) {

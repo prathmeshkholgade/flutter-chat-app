@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_chat/core/dependency/app_dependency.dart';
 import 'package:flutter_chat/core/theme/theme.dart';
-import 'package:flutter_chat/services/routes/route_paths.dart';
+import 'package:flutter_chat/core/utils/app_initializer.dart';
 import 'package:flutter_chat/services/routes/routes.dart';
 import 'package:get/get.dart';
 import 'package:sizer/sizer.dart';
 
-void main() {
-  AppDependency.init();
-  runApp(const MyApp());
+void main() async {
+  final initialRoute = await AppInitializer.initializer();
+  runApp(MyApp(initialRoute: initialRoute));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String initialRoute;
+  const MyApp({super.key, required this.initialRoute});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
       builder: (context, orientation, screenType) {
         return GetMaterialApp(
           getPages: AppRoutes.routes,
-          initialRoute: RoutePaths.loginScreen,
+          initialRoute: initialRoute,
           title: 'Chat',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,

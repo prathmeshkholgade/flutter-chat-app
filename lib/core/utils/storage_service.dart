@@ -27,7 +27,7 @@ class StorageService {
     await _prefs!.setString(_tokenKey, token);
   }
 
-  Future<String?> getToken(String token) async {
+  Future<String?> getToken() async {
     await _ensureInitialized();
     return _prefs!.getString(_tokenKey);
   }
