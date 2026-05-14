@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_chat/core/enviroment/enviroment.dart';
 import 'package:flutter_chat/core/exceptions/api_exceptions.dart';
+import 'package:flutter_chat/core/utils/storage_service.dart';
 
 enum RequestType { GET, POST, PUT, PATCH, DELETE }
 
@@ -46,9 +47,12 @@ class ApiBaseClientService {
 
     _dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
-          return handler.next(options);
-        },
+        onRequest:
+            (RequestOptions options, RequestInterceptorHandler handler) async {
+              final token = await StorageService().getToken();
+              options.headers["Authorization"] = "Bearer $token";
+              return handler.next(options);
+            },
         onResponse: (Response response, ResponseInterceptorHandler handler) {
           return handler.next(response);
         },

@@ -2,8 +2,8 @@ import 'package:flutter_chat/services/routes/route_paths.dart';
 import 'package:flutter_chat/src/views/screens/auth/login_screen.dart';
 import 'package:flutter_chat/src/views/screens/auth/signup_screen.dart';
 import 'package:flutter_chat/src/views/screens/bottom_nav.dart';
-import 'package:flutter_chat/src/views/screens/home/home_screen.dart';
-import 'package:get/get_navigation/src/routes/get_route.dart';
+import 'package:flutter_chat/src/views/screens/chat/all_users_screen.dart';
+import 'package:flutter_chat/src/views/screens/chat/chat_detail_screen.dart';
 import 'package:get/route_manager.dart';
 
 class AppRoutes {
@@ -21,6 +21,16 @@ class AppRoutes {
     GetPage(
       name: RoutePaths.bottomNav,
       page: () => BottomNav(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: RoutePaths.allUsersScreen,
+      page: () => AllUsersScreen(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: RoutePaths.chatDetailScreen,
+      page: () => ChatDetailScreen(),
       transition: Transition.rightToLeft,
     ),
   ];
