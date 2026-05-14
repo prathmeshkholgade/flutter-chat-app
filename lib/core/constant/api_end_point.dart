@@ -3,5 +3,6 @@ class ApiEndPoint {
   static const signup = "/auth/signup";
   static const getAllUser = "/chat";
   static const directChat = "/chat/direct";
-
+  static const getChatsUser = "/chat/inbox";
+  static const getGroupMembers = "/group/";
 }

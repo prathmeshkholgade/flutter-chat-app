@@ -22,7 +22,9 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
   void initState() {
     super.initState();
     if (chatController.allUsers.isEmpty) {
-      chatController.getAllUsers();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        chatController.getAllUsers();
+      });
     }
   }
 
@@ -98,7 +100,7 @@ Widget _buildChatRow(
 
               Expanded(
                 child: Text(
-                  user.fullName,
+                    user.fullName,
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat/core/constant/app_colors.dart';
+import 'package:flutter_chat/core/utils/loading_helper.dart';
 import 'package:flutter_chat/services/routes/route_paths.dart';
+import 'package:flutter_chat/src/controllers/chat/chat_controller.dart';
+import 'package:flutter_chat/src/models/chat/chat_users_response.dart';
 import 'package:get/get.dart';
 import 'package:get/state_manager.dart';
 import 'package:sizer/sizer.dart';
@@ -13,6 +16,17 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final chatController = Get.find<ChatController>();
+  @override
+  void initState() {
+    super.initState();
+    if (chatController.userChats.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        chatController.getChatsUser();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,107 +36,145 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         child: Icon(Icons.add),
       ),
-      body: Center(child: Text("Home Screen")),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          "Chats",
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+        ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Obx(() {
+          if (chatController.isLoading.value) {
+            return Center(child: LoadingHelper.loading());
+          }
+          return NotificationListener<ScrollNotification>(
+            onNotification: (scrollInfo) {
+              if (scrollInfo.metrics.pixels >=
+                  scrollInfo.metrics.maxScrollExtent - 200) {
+                chatController.getChatsUser(isFetchMore: true);
+              }
+              return true;
+            },
+            child: ListView.builder(
+              itemCount: chatController.userChats.length,
+              itemBuilder: (context, index) {
+                final user = chatController.userChats[index];
+                return _buildChatRow(context, user, () {
+                  Get.toNamed(RoutePaths.chatDetailScreen);
+                  // chatController.createDirectChatChannel(user.id);
+                  // Get.toNamed(RoutePaths.chatDetailScreen);
+                });
+              },
+            ),
+          );
+        }),
+      ),
     );
   }
 }
 
-Widget _buildChatRow(BuildContext context) {
+Widget _buildChatRow(BuildContext context, ChatModel user, VoidCallback onTap) {
   return Padding(
     padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-    child: Column(
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              height: 7.h,
-              width: 7.h,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.redColor,
-              ),
-              child: Center(
-                child: Text(
-                  "E",
-                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: AppColors.white,
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
+    child: GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                height: 7.h,
+                width: 7.h,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.redColor,
+                  image: DecorationImage(
+                    image: NetworkImage(
+                      "https://i.pinimg.com/1200x/4a/ca/fe/4acafecd9b6e8bf88b2b80b971e338eb.jpg",
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            SizedBox(width: 3.w),
+              SizedBox(width: 3.w),
 
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      user.type == "direct"
+                          ? user.user?.fullName ?? ""
+                          : user.group?.name ?? ",",
+                      style: Theme.of(context).textTheme.headlineSmall!
+                          .copyWith(
+                            fontSize: 17.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+
+                    SizedBox(height: 0.5.h),
+
+                    Text(
+                      "Hey! Are we meeting today?",
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                        fontSize: 14.sp,
+                        color: AppColors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(width: 2.w),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    "Emma Bailery",
-                    style: Theme.of(context).textTheme.headlineSmall!.copyWith(
-                      fontSize: 17.sp,
-                      fontWeight: FontWeight.w600,
+                    "10:45 AM",
+                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.black,
                     ),
                   ),
 
-                  SizedBox(height: 0.5.h),
+                  SizedBox(height: 1.h),
 
-                  Text(
-                    "Hey! Are we meeting today?",
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                      fontSize: 14.sp,
-                      color: AppColors.grey,
-                    ),
-                  ),
+                  // unread message count badge
+                  // Container(
+                  //   padding: EdgeInsets.all(1.2.w),
+                  //   decoration: BoxDecoration(
+                  //     shape: BoxShape.circle,
+                  //     color: AppColors.redColor,
+                  //   ),
+                  //   child: Text(
+                  //     "2",
+                  //     style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                  //       color: AppColors.white,
+                  //       fontSize: 11.sp,
+                  //       fontWeight: FontWeight.bold,
+                  //     ),
+                  //   ),
+                  // ),
                 ],
               ),
-            ),
+            ],
+          ),
 
-            SizedBox(width: 2.w),
+          SizedBox(height: 1.5.h),
 
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  "10:45 AM",
-                  style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.black,
-                  ),
-                ),
-
-                SizedBox(height: 1.h),
-
-                Container(
-                  padding: EdgeInsets.all(1.2.w),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.redColor,
-                  ),
-                  child: Text(
-                    "2",
-                    style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                      color: AppColors.white,
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-
-        SizedBox(height: 1.5.h),
-
-        Divider(color: AppColors.grey.withValues(alpha: 0.2), thickness: 1),
-      ],
+          Divider(color: AppColors.grey.withValues(alpha: 0.2), thickness: 1),
+        ],
+      ),
     ),
   );
 }

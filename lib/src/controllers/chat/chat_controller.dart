@@ -3,6 +3,7 @@ import 'package:flutter_chat/core/utils/snackbar_helper.dart';
 import 'package:flutter_chat/services/api/api_service.dart';
 import 'package:flutter_chat/services/api/chat/chat_service.dart';
 import 'package:flutter_chat/src/models/chat/all_users_response_model.dart';
+import 'package:flutter_chat/src/models/chat/chat_users_response.dart';
 import 'package:get/get.dart';
 
 class ChatController extends GetxController {
@@ -75,28 +76,39 @@ class ChatController extends GetxController {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  final RxList<ChatModel> userChats = RxList<ChatModel>();
+  final RxBool isLoadingUserChats = false.obs;
+  final RxBool isLoadingMoreUserChats = false.obs;
+  final RxBool hasMoreUserChats = true.obs;
+  int totalChatsPages = 1;
+  int currentChatPage = 1;
+  Future<void> getChatsUser({bool isFetchMore = false}) async {
+    if (isFetchMore) {
+      if (!hasMoreUserChats.value || isLoadingMoreUserChats.value) {
+        return;
+      }
+      isLoadingMoreUserChats.value = true;
+      currentChatPage++;
+    } else {
+      currentChatPage = 1;
+      userChats.clear();
+      isLoadingUserChats.value = true;
+    }
+    try {
+      final res = await _chatService.getChatsUser();
+      res.fold(
+        (error) => {debugPrint("$error")},
+        (success) => {
+          userChats.assignAll(success.data?.chats ?? []),
+          totalChatsPages = success.data!.totalPages,
+          hasMoreUserChats.value = currentChatPage < totalChatsPages,
+        },
+      );
+    } catch (e) {
+      return SnackbarHelper.showError(message: "$e");
+    } finally {
+      isLoadingUserChats.value = false;
+      isLoadingMoreUserChats.value = false;
+    }
+  }
 }
