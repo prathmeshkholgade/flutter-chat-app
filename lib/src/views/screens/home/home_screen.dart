@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat/core/constant/app_colors.dart';
 import 'package:flutter_chat/core/utils/loading_helper.dart';
+import 'package:flutter_chat/services/api/chat/socket_service.dart';
 import 'package:flutter_chat/services/routes/route_paths.dart';
 import 'package:flutter_chat/src/controllers/chat/chat_controller.dart';
 import 'package:flutter_chat/src/models/chat/chat_users_response.dart';
@@ -17,6 +18,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final chatController = Get.find<ChatController>();
+  final SocketService _socketService = SocketService();
   @override
   void initState() {
     super.initState();
@@ -48,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Padding(
         padding: const EdgeInsets.all(12),
         child: Obx(() {
-          if (chatController.isLoading.value) {
+          if (chatController.isLoadingUserChats.value) {
             return Center(child: LoadingHelper.loading());
           }
           return NotificationListener<ScrollNotification>(
@@ -65,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 final user = chatController.userChats[index];
                 return _buildChatRow(context, user, () {
                   Get.toNamed(RoutePaths.chatDetailScreen);
+                  _socketService.joinRoom(user.chatId);
                   // chatController.createDirectChatChannel(user.id);
                   // Get.toNamed(RoutePaths.chatDetailScreen);
                 });

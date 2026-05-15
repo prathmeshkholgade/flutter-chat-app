@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_chat/core/utils/snackbar_helper.dart';
 import 'package:flutter_chat/services/api/api_service.dart';
 import 'package:flutter_chat/services/api/chat/chat_service.dart';
+import 'package:flutter_chat/services/api/chat/socket_service.dart';
 import 'package:flutter_chat/src/models/chat/all_users_response_model.dart';
 import 'package:flutter_chat/src/models/chat/chat_users_response.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,14 @@ class ChatController extends GetxController {
   ChatController({required ApiBaseClientService dioService})
     : _chatService = ChatService(dioService: dioService);
 
+  final SocketService _socketService = SocketService();
   final RxList<ChatUserModel> allUsers = RxList<ChatUserModel>();
+
+  @override
+  void onInit() {
+    super.onInit();
+    _socketService.init();
+  }
 
   final RxBool isLoading = false.obs;
   final RxBool isLoadingMoreUser = false.obs;
@@ -82,6 +90,7 @@ class ChatController extends GetxController {
   final RxBool hasMoreUserChats = true.obs;
   int totalChatsPages = 1;
   int currentChatPage = 1;
+
   Future<void> getChatsUser({bool isFetchMore = false}) async {
     if (isFetchMore) {
       if (!hasMoreUserChats.value || isLoadingMoreUserChats.value) {
