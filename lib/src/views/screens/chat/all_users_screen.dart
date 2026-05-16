@@ -56,7 +56,7 @@ class _AllUsersScreenState extends State<AllUsersScreen> {
                 final user = chatController.allUsers[index];
                 return _buildChatRow(context, user, () {
                   chatController.createDirectChatChannel(user.id);
-                  Get.toNamed(RoutePaths.chatDetailScreen);
+                  Get.toNamed(RoutePaths.chatDetailScreen, arguments: user);
                 });
               },
             ),

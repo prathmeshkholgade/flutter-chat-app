@@ -14,6 +14,7 @@ class StorageService {
   bool _isInitialized = false;
 
   static const String _tokenKey = 'token';
+  static const String userId = 'user_id';
 
   Future<void> init() async {
     if (!_isInitialized) {
@@ -25,6 +26,16 @@ class StorageService {
   Future<void> saveToken(String token) async {
     await _ensureInitialized();
     await _prefs!.setString(_tokenKey, token);
+  }
+
+  Future<void> saveUserId(String id) async {
+    await _ensureInitialized();
+    await _prefs!.setString(userId, id);
+  }
+
+  Future<String?> getUserId() async {
+    await _ensureInitialized();
+    return _prefs!.getString(userId);
   }
 
   Future<String?> getToken() async {

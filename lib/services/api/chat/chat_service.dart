@@ -5,6 +5,7 @@ import 'package:flutter_chat/core/exceptions/api_exceptions.dart';
 import 'package:flutter_chat/services/api/api_service.dart';
 import 'package:flutter_chat/src/models/base_response_model.dart';
 import 'package:flutter_chat/src/models/chat/all_users_response_model.dart';
+import 'package:flutter_chat/src/models/chat/chat_messages_data.dart';
 import 'package:flutter_chat/src/models/chat/chat_users_response.dart';
 
 class ChatService {
@@ -85,4 +86,32 @@ class ChatService {
       return Left(ApiExceptions(message: e.toString()));
     }
   }
+
+
+  Future<Either<ApiExceptions, BaseResponseModel<ChatMessagesData>>>
+  getChatMessages(int chatId) async {
+    try {
+      final res = await _apiClient.request(
+        endpoint: "${ApiEndPoint.chat}/$chatId",
+        method: RequestType.GET.name,
+      );
+      if (res.data["status"] == 200 || res.data["success"] == true) {
+        final data = BaseResponseModel<ChatMessagesData>.fromJson(
+          res.data,
+          (json) => ChatMessagesData.fromJson(json),
+        );
+        return Right(data);
+      } else {
+        return Left(
+          ApiExceptions(message: res.data["message"] ?? "An error occured"),
+        );
+      }
+    } on ApiExceptions catch (e) {
+      return Left(ApiExceptions(message: e.message));
+    } catch (e) {
+      return Left(ApiExceptions(message: e.toString()));
+    }
+  }
+
+
 }

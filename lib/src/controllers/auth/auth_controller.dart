@@ -39,6 +39,7 @@ class AuthController extends GetxController {
         },
         (success) {
           _localStorageService.saveToken(success.data!.token.toString());
+          _localStorageService.saveUserId(success.data!.user!.id.toString());
           Get.offAllNamed(RoutePaths.bottomNav);
           return SnackbarHelper.showSuccess(
             message: "User logged in successfully",
@@ -73,6 +74,7 @@ class AuthController extends GetxController {
         },
         (success) {
           _localStorageService.saveToken(success.data!.token.toString());
+          _localStorageService.saveUserId(success.data!.user!.id.toString());
           Get.offAllNamed(RoutePaths.bottomNav);
           return SnackbarHelper.showSuccess(
             message: "User signed up successfully",

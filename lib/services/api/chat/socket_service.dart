@@ -11,7 +11,7 @@ class SocketService {
 
   bool isConnected = false;
 
-  void init() {
+  Future<void> init() async {
     _socket = Io.io(
       Enviroment.baseUrl,
       Io.OptionBuilder()
@@ -36,21 +36,30 @@ class SocketService {
     });
 
     _socket.onConnectError((data) {
+      isConnected = false;
       AppLogger.d("Connect Error: $data");
     });
 
     _socket.onError((data) {
+      isConnected = false;
       AppLogger.d("Socket Error: $data");
     });
   }
 
   void joinRoom(chatId) {
+    insureConnected();
     AppLogger.d("Joining Room: $chatId");
     _socket.emitWithAck(
       "join_chat",
       chatId,
       ack: (response) => {AppLogger.d("Join Room Response: $response")},
     );
+  }
+
+  void insureConnected() async {
+    if (!isConnected) {
+      await init();
+    }
   }
 
   void leaveChat(chatId) {
@@ -66,6 +75,7 @@ class SocketService {
     required int senderId,
     required String message,
   }) {
+    insureConnected();
     _socket.emitWithAck(
       "send_message",
       {"chatId": chatId, "senderId": senderId, "message": message},
@@ -75,10 +85,11 @@ class SocketService {
 
   void onMessageReceive(Function(Map<String, dynamic>) callBack) {
     try {
-      _socket.on(
-        "new_message",
-        (data) => {AppLogger.d("new message receive $data"), callBack(data)},
-      );
+      _socket.off("new_message");
+      _socket.on("new_message", (data) {
+        AppLogger.d("new message receive $data");
+        callBack(data);
+      });
     } catch (e) {
       AppLogger.e(e);
     }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat/core/utils/snackbar_helper.dart';
+import 'package:flutter_chat/core/utils/storage_service.dart';
 import 'package:flutter_chat/services/api/api_service.dart';
 import 'package:flutter_chat/services/api/chat/chat_service.dart';
 import 'package:flutter_chat/services/api/chat/socket_service.dart';
 import 'package:flutter_chat/src/models/chat/all_users_response_model.dart';
+import 'package:flutter_chat/src/models/chat/chat_messages_data.dart';
 import 'package:flutter_chat/src/models/chat/chat_users_response.dart';
 import 'package:get/get.dart';
 
@@ -12,6 +14,7 @@ class ChatController extends GetxController {
   ChatController({required ApiBaseClientService dioService})
     : _chatService = ChatService(dioService: dioService);
 
+  final TextEditingController messageController = TextEditingController();
   final SocketService _socketService = SocketService();
   final RxList<ChatUserModel> allUsers = RxList<ChatUserModel>();
 
@@ -19,6 +22,12 @@ class ChatController extends GetxController {
   void onInit() {
     super.onInit();
     _socketService.init();
+  }
+
+  int currentUserId = 1;
+  Future<void> getCurrentUserId() async {
+    final userId = await StorageService().getUserId();
+    currentUserId = int.parse(userId.toString());
   }
 
   final RxBool isLoading = false.obs;
@@ -118,6 +127,46 @@ class ChatController extends GetxController {
     } finally {
       isLoadingUserChats.value = false;
       isLoadingMoreUserChats.value = false;
+    }
+  }
+
+  final RxList<ChatMessageModel> chatMessages = RxList<ChatMessageModel>();
+  final RxBool isLoadingChatMessage = false.obs;
+  final RxBool isLoadingMoreChatMessage = false.obs;
+  final RxBool hasMoreChatMessage = true.obs;
+  // int totalChatMessage = 1;
+  int currentMessagePage = 1;
+
+  Future<void> getChatMessages({
+    required int chatId,
+    bool isFetchMore = false,
+  }) async {
+    if (isFetchMore) {
+      if (!hasMoreChatMessage.value || isLoadingMoreChatMessage.value) {
+        return;
+      }
+      isLoadingMoreChatMessage.value = true;
+      currentMessagePage++;
+    } else {
+      currentMessagePage = 1;
+      chatMessages.clear();
+      isLoadingChatMessage.value = true;
+    }
+    try {
+      final res = await _chatService.getChatMessages(chatId);
+      res.fold(
+        (error) => {debugPrint("$error")},
+        (success) => {
+          chatMessages.assignAll(success.data?.chats ?? []),
+          if (success.data?.chats == null || success.data!.chats.isEmpty)
+            {hasMoreChatMessage.value = false},
+        },
+      );
+    } catch (e) {
+      return SnackbarHelper.showError(message: "$e");
+    } finally {
+      isLoadingChatMessage.value = false;
+      isLoadingMoreChatMessage.value = false;
     }
   }
 }
