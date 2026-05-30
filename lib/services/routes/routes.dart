@@ -4,6 +4,7 @@ import 'package:flutter_chat/src/views/screens/auth/signup_screen.dart';
 import 'package:flutter_chat/src/views/screens/bottom_nav.dart';
 import 'package:flutter_chat/src/views/screens/chat/all_users_screen.dart';
 import 'package:flutter_chat/src/views/screens/chat/chat_detail_screen.dart';
+import 'package:flutter_chat/src/views/screens/chat/create_group_screen.dart';
 import 'package:get/route_manager.dart';
 
 class AppRoutes {
@@ -31,6 +32,11 @@ class AppRoutes {
     GetPage(
       name: RoutePaths.chatDetailScreen,
       page: () => ChatDetailScreen(),
+      transition: Transition.rightToLeft,
+    ),
+    GetPage(
+      name: RoutePaths.createGroupScreen,
+      page: () => CreateGroupScreen(),
       transition: Transition.rightToLeft,
     ),
   ];

@@ -4,4 +4,5 @@ class RoutePaths {
   static const bottomNav = "/main";
   static const allUsersScreen = "/allUsersScreen";
   static const chatDetailScreen = "/chatDetailScreen";
+  static const createGroupScreen = "/createGroupScreen";
 }

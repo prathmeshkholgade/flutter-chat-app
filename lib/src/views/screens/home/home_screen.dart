@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat/core/constant/app_colors.dart';
+import 'package:flutter_chat/core/utils/helpers.dart';
 import 'package:flutter_chat/core/utils/loading_helper.dart';
 import 'package:flutter_chat/services/routes/route_paths.dart';
 import 'package:flutter_chat/src/controllers/chat/chat_controller.dart';
@@ -51,6 +52,14 @@ class _HomeScreenState extends State<HomeScreen> {
           if (chatController.isLoadingUserChats.value) {
             return Center(child: LoadingHelper.loading());
           }
+          if (chatController.userChats.isEmpty) {
+            return Center(
+              child: Text(
+                "No chats available",
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            );
+          }
           return NotificationListener<ScrollNotification>(
             onNotification: (scrollInfo) {
               if (scrollInfo.metrics.pixels >=
@@ -64,7 +73,19 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (context, index) {
                 final user = chatController.userChats[index];
                 return _buildChatRow(context, user, () {
-                  Get.toNamed(RoutePaths.chatDetailScreen, arguments: user);
+                  Get.toNamed(
+                    RoutePaths.chatDetailScreen,
+                    arguments: {
+                      "chatId": user.chatId,
+                      "fullName": user.type == "direct"
+                          ? (user.user?.fullName ?? "")
+                          : (user.group?.name ?? ""),
+                      "type": user.type,
+                      "image": user.type == "direct"
+                          ? user.user?.image
+                          : user.group?.image,
+                    },
+                  );
                 });
               },
             ),
@@ -119,7 +140,7 @@ Widget _buildChatRow(BuildContext context, ChatModel user, VoidCallback onTap) {
                     SizedBox(height: 0.5.h),
 
                     Text(
-                      "Hey! Are we meeting today?",
+                      user.lastMessage?.text ?? "No messages yet",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium!.copyWith(
@@ -137,7 +158,9 @@ Widget _buildChatRow(BuildContext context, ChatModel user, VoidCallback onTap) {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    "10:45 AM",
+                    user.lastMessage != null
+                        ? Helpers.formatChatTime(user.lastMessage!.createdAt)
+                        : "",
                     style: Theme.of(context).textTheme.bodySmall!.copyWith(
                       fontSize: 12.sp,
                       fontWeight: FontWeight.bold,

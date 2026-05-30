@@ -31,12 +31,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   void initState() {
     super.initState();
-
     chatController.getCurrentUserId();
     chatController.chatMessages.clear();
-    final user = args as ChatModel;
-    chatController.getChatMessages(chatId: user.chatId);
-    _socketService.joinRoom(user.chatId);
+    final int chatId = args["chatId"] as int;
+    chatController.getChatMessages(chatId: chatId);
+    _socketService.joinRoom(chatId.toString());
+
     _listenForMessages();
     _scrollToBottom();
   }
@@ -51,10 +51,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   void _listenForMessages() {
     _socketService.onMessageReceive((data) {
       AppLogger.i("Message received: $data");
-      if (int.tryParse(data["senderId"].toString()) ==
-          int.tryParse(chatController.currentUserId.toString())) {
-        return;
-      }
+      // if (int.tryParse(data["senderId"].toString()) ==
+      //     int.tryParse(chatController.currentUserId.toString())) {
+      //   return;
+      // }
       chatController.chatMessages.add(
         ChatMessageModel(
           chatId: data["chatId"],
@@ -72,21 +72,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   void _sendMessage() {
-    final user = args as ChatModel;
+    final int chatId = args["chatId"] as int;
     final text = chatController.messageController.text.trim();
     if (text.isEmpty) {
       return;
     }
-    AppLogger.d(user.user);
     _socketService.sendMessage(
-      chatId: user.chatId,
+      chatId: chatId,
       senderId: int.parse(chatController.currentUserId.toString()),
       message: text,
     );
     chatController.messageController.clear();
     chatController.chatMessages.add(
       ChatMessageModel(
-        chatId: user.chatId,
+        chatId: chatId,
         type: "text",
         id: DateTime.now().millisecondsSinceEpoch,
         senderId: int.parse(chatController.currentUserId.toString()),
@@ -116,7 +115,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   Widget build(BuildContext context) {
     AppLogger.d("currentUserId: ${chatController.currentUserId}");
-    final user = args as ChatModel;
+    final String fullName = args["fullName"] ?? "Chat";
+    final String chatType = args["type"] ?? "direct";
+    final String? chatImage = args["image"];
+    final int? memberCount = args["memberCount"];
+
     return Scaffold(
       backgroundColor: const Color(0xFFECE5DD),
       appBar: AppBar(
@@ -127,21 +130,45 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         title: Row(
           children: [
             CircleAvatar(
-              radius: 2.6.h,
-              backgroundColor: AppColors.grey.withValues(alpha: 0.25),
-
-              child: Icon(Icons.person, color: AppColors.grey, size: 3.h),
+              radius: 2.3.h,
+              backgroundColor: AppColors.grey.withValues(alpha: 0.15),
+              backgroundImage: chatImage != null && chatImage.isNotEmpty
+                  ? NetworkImage(chatImage)
+                  : null,
+              child: chatImage == null || chatImage.isEmpty
+                  ? Icon(
+                      chatType == "group" ? Icons.group_rounded : Icons.person_rounded,
+                      color: const Color(0xFF0F52BA),
+                      size: 2.6.h,
+                    )
+                  : null,
             ),
             SizedBox(width: 3.w),
             Expanded(
-              child: Text(
-                user.user?.fullName ?? "Name",
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w700,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    fullName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  if (chatType == "group")
+                    Text(
+                      memberCount != null ? "$memberCount members" : "group chat",
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                ],
               ),
             ),
           ],

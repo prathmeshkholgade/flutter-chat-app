@@ -18,6 +18,68 @@ class ChatController extends GetxController {
   final SocketService _socketService = SocketService();
   final RxList<ChatUserModel> allUsers = RxList<ChatUserModel>();
 
+  // Group creation state and logic
+  final groupFormKey = GlobalKey<FormState>();
+  final groupNameController = TextEditingController();
+  final groupDescriptionController = TextEditingController();
+  
+  final RxInt groupNameLength = 0.obs;
+  final RxInt groupDescriptionLength = 0.obs;
+  
+  final RxList<ChatUserModel> selectedMembers = <ChatUserModel>[].obs;
+  final RxString groupImagePath = "".obs;
+  final RxBool isCreatingGroup = false.obs;
+
+  void toggleMemberSelection(ChatUserModel user) {
+    if (selectedMembers.any((m) => m.id == user.id)) {
+      selectedMembers.removeWhere((m) => m.id == user.id);
+    } else {
+      selectedMembers.add(user);
+    }
+  }
+
+  void clearGroupFields() {
+    groupNameController.clear();
+    groupDescriptionController.clear();
+    groupNameLength.value = 0;
+    groupDescriptionLength.value = 0;
+    selectedMembers.clear();
+    groupImagePath.value = "";
+  }
+
+  Future<void> createGroup() async {
+    if (groupFormKey.currentState == null || !groupFormKey.currentState!.validate()) {
+      return;
+    }
+    if (selectedMembers.isEmpty) {
+      SnackbarHelper.showError(message: "Please select at least one member");
+      return;
+    }
+    isCreatingGroup.value = true;
+    try {
+      final res = await _chatService.createGroup(
+        name: groupNameController.text.trim(),
+        description: groupDescriptionController.text.trim(),
+        memberIds: selectedMembers.map((m) => m.id).toList(),
+      );
+      res.fold(
+        (error) {
+          SnackbarHelper.showError(message: error.message ?? "Failed to create group");
+        },
+        (success) {
+          SnackbarHelper.showSuccess(message: "Group created successfully");
+          clearGroupFields();
+          Get.back(); // Go back from create group screen
+          getChatsUser(); // Refresh chat list
+        },
+      );
+    } catch (e) {
+      SnackbarHelper.showError(message: e.toString());
+    } finally {
+      isCreatingGroup.value = false;
+    }
+  }
+
   @override
   void onInit() {
     super.onInit();

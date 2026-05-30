@@ -113,5 +113,32 @@ class ChatService {
     }
   }
 
-
+  Future<Either<ApiExceptions, dynamic>> createGroup({
+    required String name,
+    required String description,
+    required List<int> memberIds,
+  }) async {
+    try {
+      final res = await _apiClient.request(
+        endpoint: ApiEndPoint.createGroup,
+        method: RequestType.POST.name,
+        data: {
+          "name": name,
+          "description": description,
+          "memberIds": memberIds,
+        },
+      );
+      if (res.data["status"] == 200 || res.data["success"] == true) {
+        return Right(res.data);
+      } else {
+        return Left(
+          ApiExceptions(message: res.data["message"] ?? "An error occurred"),
+        );
+      }
+    } on ApiExceptions catch (e) {
+      return Left(ApiExceptions(message: e.message));
+    } catch (e) {
+      return Left(ApiExceptions(message: e.toString()));
+    }
+  }
 }

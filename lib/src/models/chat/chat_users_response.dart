@@ -29,6 +29,7 @@ class ChatModel {
   final UserModel? user;
   final int? memberCount;
   final GroupModel? group;
+  final LastMessageModel? lastMessage;
 
   ChatModel({
     required this.chatId,
@@ -36,6 +37,7 @@ class ChatModel {
     this.user,
     this.memberCount,
     this.group,
+    this.lastMessage,
   });
 
   factory ChatModel.fromJson(Map<String, dynamic> json) {
@@ -45,6 +47,9 @@ class ChatModel {
       user: json["user"] != null ? UserModel.fromJson(json["user"]) : null,
       memberCount: json["memberCount"],
       group: json["group"] != null ? GroupModel.fromJson(json["group"]) : null,
+      lastMessage: json["lastMessage"] != null
+          ? LastMessageModel.fromJson(json["lastMessage"])
+          : null,
     );
   }
 }
@@ -116,6 +121,73 @@ class GroupCreatedByModel {
       id: json["id"],
       fullName: json["fullName"] ?? "",
       email: json["email"] ?? "",
+    );
+  }
+}
+
+class LastMessageModel {
+  final int id;
+  final String type;
+  final int senderId;
+  final int chatId;
+  final String? text;
+  final String? fileUrl;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+  final MessageUserModel? user;
+
+  LastMessageModel({
+    required this.id,
+    required this.type,
+    required this.senderId,
+    required this.chatId,
+    this.text,
+    this.fileUrl,
+    this.createdAt,
+    this.updatedAt,
+    this.user,
+  });
+
+  factory LastMessageModel.fromJson(Map<String, dynamic> json) {
+    return LastMessageModel(
+      id: json["id"],
+      type: json["type"] ?? "",
+      senderId: json["senderId"],
+      chatId: json["chatId"],
+      text: json["text"],
+      fileUrl: json["fileUrl"],
+      createdAt: json["createdAt"] != null
+          ? DateTime.parse(json["createdAt"]).toLocal()
+          : null,
+      updatedAt: json["updatedAt"] != null
+          ? DateTime.parse(json["updatedAt"]).toLocal()
+          : null,
+      user: json["User"] != null
+          ? MessageUserModel.fromJson(json["User"])
+          : null,
+    );
+  }
+}
+
+class MessageUserModel {
+  final int id;
+  final String fullName;
+  final String email;
+  final String? image;
+
+  MessageUserModel({
+    required this.id,
+    required this.fullName,
+    required this.email,
+    this.image,
+  });
+
+  factory MessageUserModel.fromJson(Map<String, dynamic> json) {
+    return MessageUserModel(
+      id: json["id"],
+      fullName: json["fullName"] ?? "",
+      email: json["email"] ?? "",
+      image: json["image"],
     );
   }
 }

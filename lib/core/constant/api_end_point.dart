@@ -6,4 +6,5 @@ class ApiEndPoint {
   static const directChat = "/chat/direct";
   static const getChatsUser = "/chat/inbox";
   static const getGroupMembers = "/group/";
+  static const createGroup = "/group";
 }
